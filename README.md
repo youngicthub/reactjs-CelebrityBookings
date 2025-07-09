@@ -207,4 +207,4 @@ For issues or questions:
 
 ## License
 
-This project is licensed under the MIT License.# reactjs-CelebrityBookings
+This project is licensed under the MIT License.
