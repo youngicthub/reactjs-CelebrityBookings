@@ -21,7 +21,7 @@ export const celebrities: Celebrity[] = [
     id: '1',
     name: 'Sarah Johnson',
     category: 'Actress',
-    image: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400&h=400&fit=crop',
+    image: 'https://cdn.pixabay.com/photo/2018/08/04/20/48/woman-3584435_1280.jpg',
     description: 'Award-winning actress known for her versatile performances in drama and comedy films.',
     hourlyRate: 5000,
     availability: 'available',
