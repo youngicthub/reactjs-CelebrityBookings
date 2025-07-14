@@ -305,94 +305,155 @@ const Booking = () => {
           </div>
         );
         
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="bg-muted/30 p-6 rounded-lg">
-              <h4 className="font-semibold mb-4">Payment Summary</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>{selectedPackage.name}</span>
-                  <span>${selectedPackage.price.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Platform fee (5%)</span>
-                  <span>${(selectedPackage.price * 0.05).toLocaleString()}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>${(selectedPackage.price * 1.05).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label className="text-base font-medium">Payment Method</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {[
-                    { value: 'bank_transfer', label: 'Bank Transfer' },
-                    { value: 'usdt', label: 'USDT' },
-                    { value: 'btc', label: 'Bitcoin' },
-                    { value: 'eth', label: 'Ethereum' }
-                  ].map((method) => (
-                    <Button
-                      key={method.value}
-                      variant={paymentMethod === method.value ? 'default' : 'outline'}
-                      onClick={() => setPaymentMethod(method.value as any)}
-                      className="h-12"
-                    >
-                      {method.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {paymentMethod === 'bank_transfer' ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="bankName">Bank Name</Label>
-                    <Input
-                      id="bankName"
-                      placeholder="Enter your bank name"
-                      value={paymentDetails.bankName}
-                      onChange={(e) => setPaymentDetails(prev => ({ ...prev, bankName: e.target.value }))}
-                    />
+        case 3:
+          const paymentDestinations = {
+            bank_transfer: {
+              bankName: "Access Bank",
+              accountName: "Celebrity Booking Ltd",
+              accountNumber: "1234567890"
+            },
+            usdt: "TUzVXncYh....your-usdt-wallet-address",
+            btc: "bc1qxyz....your-bitcoin-wallet-address",
+            eth: "0x123abc....your-ethereum-wallet-address"
+          };
+        
+          return (
+            <div className="space-y-6">
+              {/* Payment Summary */}
+              <div className="bg-muted/30 p-6 rounded-lg">
+                <h4 className="font-semibold mb-4">Payment Summary</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>{selectedPackage.name}</span>
+                    <span>${selectedPackage.price.toLocaleString()}</span>
                   </div>
-                  <div>
-                    <Label htmlFor="accountNumber">Account Number</Label>
-                    <Input
-                      id="accountNumber"
-                      placeholder="Enter your account number"
-                      value={paymentDetails.accountNumber}
-                      onChange={(e) => setPaymentDetails(prev => ({ ...prev, accountNumber: e.target.value }))}
-                    />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Platform fee (5%)</span>
+                    <span>${(selectedPackage.price * 0.05).toLocaleString()}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total</span>
+                    <span>${(selectedPackage.price * 1.05).toLocaleString()}</span>
                   </div>
                 </div>
-              ) : (
+              </div>
+        
+              {/* Payment Method Selection */}
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="cryptoAddress">
-                    {paymentMethod.toUpperCase()} Wallet Address
-                  </Label>
-                  <Input
-                    id="cryptoAddress"
-                    placeholder={`Enter your ${paymentMethod.toUpperCase()} wallet address`}
-                    value={paymentDetails.cryptoAddress}
-                    onChange={(e) => setPaymentDetails(prev => ({ ...prev, cryptoAddress: e.target.value }))}
-                  />
+                  <Label className="text-base font-medium">Payment Method</Label>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    {[
+                      { value: 'bank_transfer', label: 'Bank Transfer' },
+                      { value: 'usdt', label: 'USDT' },
+                      { value: 'btc', label: 'Bitcoin' },
+                      { value: 'eth', label: 'Ethereum' }
+                    ].map((method) => (
+                      <Button
+                        key={method.value}
+                        variant={paymentMethod === method.value ? 'default' : 'outline'}
+                        onClick={() => setPaymentMethod(method.value as any)}
+                        className="h-12"
+                      >
+                        {method.label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              )}
+        
+                {/* Show Destination Payment Details */}
+                {paymentMethod === 'bank_transfer' ? (
+                  <div className="space-y-4">
+                    <div className="bg-muted/20 p-4 rounded-md">
+                      <p><strong>Bank:</strong> {paymentDestinations.bank_transfer.bankName}</p>
+                      <p><strong>Account Name:</strong> {paymentDestinations.bank_transfer.accountName}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <p className="font-medium">Account Number: {paymentDestinations.bank_transfer.accountNumber}</p>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(paymentDestinations.bank_transfer.accountNumber);
+                            alert("Bank account number copied!");
+                          }}
+                        >
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
+        
+                    {/* User provides their payment proof */}
+                    <div>
+                      <Label htmlFor="accountNumber">Your Account Number / Proof of Payment</Label>
+                      <Input
+                        id="accountNumber"
+                        placeholder="Enter your account number or reference"
+                        value={paymentDetails.accountNumber}
+                        onChange={(e) =>
+                          setPaymentDetails((prev) => ({
+                            ...prev,
+                            accountNumber: e.target.value
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="cryptoAddress">
+                      {paymentMethod.toUpperCase()} Wallet Address
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="cryptoAddress"
+                        readOnly
+                        value={paymentDestinations[paymentMethod] || ''}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          navigator.clipboard.writeText(paymentDestinations[paymentMethod]);
+                          alert(`${paymentMethod.toUpperCase()} wallet address copied!`);
+                        }}
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Send the payment to the above {paymentMethod.toUpperCase()} wallet address and submit proof below.
+                    </p>
+                    <div>
+                      <Label htmlFor="cryptoProof">Your Wallet Address / Transaction Hash</Label>
+                      <Input
+                        id="cryptoProof"
+                        placeholder={`Enter your ${paymentMethod.toUpperCase()} sending address or transaction hash`}
+                        value={paymentDetails.cryptoAddress}
+                        onChange={(e) =>
+                          setPaymentDetails((prev) => ({
+                            ...prev,
+                            cryptoAddress: e.target.value
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+        
+              {/* Submit Button */}
+              <Button onClick={handlePayment} size="lg" className="w-full">
+                Submit Booking
+              </Button>
+        
+              <p className="text-sm text-muted-foreground text-center">
+                Your booking will be reviewed by our admin team
+              </p>
             </div>
-            
-            <Button onClick={handlePayment} size="lg" className="w-full">
-              Submit Booking
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Your booking will be reviewed by our admin team
-            </p>
-          </div>
-        );
+          );
+        
         
       case 4:
         return (

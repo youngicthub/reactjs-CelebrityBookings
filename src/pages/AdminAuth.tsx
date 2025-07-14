@@ -38,6 +38,11 @@ const AdminAuth = () => {
     if (profile?.role === 'admin') {
       navigate('/admin');
     } else {
+      toast({
+        title: "Access Denied",
+        description: "You don't have admin privileges.",
+        variant: "destructive",
+      });
       navigate('/');
     }
   };
@@ -55,16 +60,37 @@ const AdminAuth = () => {
 
     setLoading(true);
     try {
-      const { error } = await signIn(email, password);
+      // Sign in directly without using AuthContext to avoid automatic redirect
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
       if (error) {
         toast({
           title: "Sign In Failed",
           description: error.message,
           variant: "destructive",
         });
-      } else {
-        // Check if user is admin after signin
-        setTimeout(() => checkUserRole(), 1000);
+      } else if (data.user) {
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+        
+        if (profile?.role === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          toast({
+            title: "Access Denied",
+            description: "You don't have admin privileges.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+          navigate('/');
+        }
       }
     } catch (error) {
       toast({
@@ -116,14 +142,25 @@ const AdminAuth = () => {
           variant: "destructive",
         });
       } else {
-        // Update user role to admin after successful signup
-        const { data: session } = await supabase.auth.getSession();
-        if (session.session?.user) {
-          await supabase
-            .from('profiles')
-            .update({ role: 'admin' })
-            .eq('user_id', session.session.user.id);
-        }
+        // Wait for auth state to settle, then update profile
+        setTimeout(async () => {
+          try {
+            const { data: session } = await supabase.auth.getSession();
+            if (session.session?.user) {
+              // Insert or update the profile with admin role
+              await supabase
+                .from('profiles')
+                .upsert({
+                  user_id: session.session.user.id,
+                  email: session.session.user.email,
+                  full_name: 'Admin User',
+                  role: 'admin'
+                });
+            }
+          } catch (profileError) {
+            console.error('Error updating profile:', profileError);
+          }
+        }, 1000);
         
         toast({
           title: "Admin Account Created",

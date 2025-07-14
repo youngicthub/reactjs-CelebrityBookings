@@ -38,31 +38,9 @@ const AdminDashboard = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    checkAdminRole();
     fetchBookings();
-  }, [user, navigate]);
+  }, []);
 
-  const checkAdminRole = async () => {
-    if (!user) return;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-    
-    if (profile?.role !== 'admin') {
-      navigate('/');
-      toast({
-        title: "Access Denied",
-        description: "You don't have admin privileges.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const fetchBookings = async () => {
     setLoading(true);

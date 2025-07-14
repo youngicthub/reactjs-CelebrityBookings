@@ -65,13 +65,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
       },
     });
+
+    // Send custom activation email via our edge function
+    if (data.user && !error) {
+      try {
+        await fetch("/functions/v1/send-activation-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${
+              (
+                await supabase.auth.getSession()
+              ).data.session?.access_token
+            }`,
+          },
+          body: JSON.stringify({
+            to: email,
+            activationUrl: redirectUrl,
+            userName: email.split("@")[0],
+          }),
+        });
+      } catch (emailError) {
+        console.error("Failed to send custom activation email:", emailError);
+      }
+    }
+
     return { error };
   };
 
@@ -80,8 +105,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
     });
+
     if (data.user && !error) {
-      window.location.href = "/";
+      // Only redirect if not on admin auth page
+      if (!window.location.pathname.includes("/admin/auth")) {
+        // Wait a moment for the auth state to settle, then check user role
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("role")
+              .eq("user_id", data.user.id)
+              .single();
+
+            if (profile?.role === "admin") {
+              window.location.href = "/admin";
+            } else {
+              window.location.href = "/";
+            }
+          } catch (profileError) {
+            console.error("Error fetching profile:", profileError);
+            // Default to home page if profile fetch fails
+            window.location.href = "/";
+          }
+        }, 500);
+      }
     }
     return { error };
   };
